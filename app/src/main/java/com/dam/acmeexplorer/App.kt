@@ -2,7 +2,6 @@ package com.dam.acmeexplorer
 
 import android.app.Application
 import com.dam.acmeexplorer.providers.FirebaseTravelProvider
-import com.dam.acmeexplorer.providers.MockTravelProvider
 import com.dam.acmeexplorer.providers.TravelProvider
 import com.dam.acmeexplorer.viewmodels.*
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions

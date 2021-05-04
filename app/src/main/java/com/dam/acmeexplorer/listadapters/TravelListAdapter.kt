@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
 
-class TravelListAdapter(private val context: Context, private val travels: List<Travel>, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean) -> Boolean)
+class TravelListAdapter(private val context: Context, private val travels: List<Travel>, private val userTravels: MutableMap<String, Boolean>, private val travelDistances: MutableList<Double>, private val onClickItem: (pos: Int, isCheckbox: Boolean) -> Boolean)
     : RecyclerView.Adapter<TravelListAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -23,7 +23,7 @@ class TravelListAdapter(private val context: Context, private val travels: List<
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(travels[position], position)
+        holder.bind(travels[position], position, travelDistances[position])
     }
 
     override fun getItemCount(): Int = travels.size
@@ -31,7 +31,7 @@ class TravelListAdapter(private val context: Context, private val travels: List<
     class ViewHolder(private val binding: TravelItemBinding, private val context: Context, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean) -> Boolean)
         : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(travel: Travel, position: Int) {
+        fun bind(travel: Travel, position: Int, distance: Double) {
             with(binding) {
                 val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
@@ -39,6 +39,8 @@ class TravelListAdapter(private val context: Context, private val travels: List<
                 travelStartDate.text = context.getString(R.string.start_date, dateFormatter.format(travel.startDate))
                 travelEndDate.text = context.getString(R.string.end_date, dateFormatter.format(travel.endDate))
                 travelPrice.text = context.getString(R.string.price, travel.price)
+                distanceText.text = context.getString(R.string.distanceText, distance)
+
                 Picasso.with(context)
                         .load(travel.imagesURL[0])
                         .resize(300, 300)

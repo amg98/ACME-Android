@@ -137,7 +137,6 @@ class MainActivity : FragmentActivity() {
 
     private fun getLocation() {
         try {
-            Log.d("LOCATION", "Start")
             val req = LocationRequest.create()
             req.interval = 5000
             req.priority = LocationRequest.PRIORITY_LOW_POWER
