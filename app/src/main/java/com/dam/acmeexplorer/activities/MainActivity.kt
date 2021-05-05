@@ -66,7 +66,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        vm.stopLocation(locationServices)
+        vm.startLocation(locationServices)
     }
 
     override fun onPause() {
