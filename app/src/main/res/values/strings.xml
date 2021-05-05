@@ -48,11 +48,20 @@
     <string name="atLeastOneImage">Debe haber al menos una imagen</string>
     <string name="selectImageText">Selecciona una imagen</string>
     <string name="noExplorerFound">No se ha encontrado un gestor de archivos en tu dispositivo</string>
-    <string name="uploadImagesError">Ha ocurrido un error subiendo las imágenes</string>
     <string name="travelCreationError">Ha ocurrido un error creando el viaje</string>
     <string name="temperatureText">Temperatura: %1$.2f ºC</string>
     <string name="pressureText">Presión: %1$.2f bar</string>
     <string name="humidityText">Humedad: %1$d %%</string>
     <string name="windSpeedText">Viento: %1$.2f km/h</string>
-    <string name="distanceText">Distancia: %1$.2f km</string>
+    <string name="distanceText">Distancia: %1$s km</string>
+    <string name="validation_priceRange">El rango de precios no es coherente</string>
+    <string name="locationPermissionText">Esta aplicación puede usar tu ubicación para mostrarla y visualizar la distancia a los viajes. ¿Quieres permitir su uso para este fin?</string>
+    <string name="loading">Cargando</string>
+    <string name="selectedTravels">Hay %1$d viajes seleccionados</string>
+    <string name="noSelectedTravels">No hay viajes seleccionados</string>
+    <string name="errorGettingTravels">Ha ocurrido un error obteniendo los viajes</string>
+    <string name="selectText">Seleccionar</string>
+    <string name="buyText">Comprar</string>
+    <string name="removeText">Eliminar</string>
+    <string name="buyTimeText">Ha llegado el momento de la compra</string>
 </resources>

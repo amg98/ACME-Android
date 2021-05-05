@@ -1,8 +1,9 @@
 package com.dam.acmeexplorer
 
 import android.app.Application
-import com.dam.acmeexplorer.providers.FirebaseTravelProvider
-import com.dam.acmeexplorer.providers.TravelProvider
+import com.dam.acmeexplorer.api.OpenWeatherService
+import com.dam.acmeexplorer.repositories.FilterRepository
+import com.dam.acmeexplorer.repositories.TravelRepository
 import com.dam.acmeexplorer.viewmodels.*
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -16,27 +17,37 @@ import org.koin.android.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 val appModule = module {
-    single<TravelProvider> { FirebaseTravelProvider(get(), get()) }
+
     single(named("UserTravels")) { mutableMapOf<String, Boolean>() }
     single { FirebaseAuth.getInstance() }
-    single { GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+    single { Firebase.storage }
+    single { Firebase.firestore }
+    single<OpenWeatherService> { Retrofit.Builder()
+            .baseUrl("https://api.openweathermap.org/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(OpenWeatherService::class.java) }
+
+    factory { FilterRepository() }
+    factory { TravelRepository(get(), get(), get()) }
+    factory { GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(BuildConfig.GOOGLE_OAUTH_CLIENT_ID)
             .requestEmail()
             .build() }
-    single(named("GitHubProvider")) { OAuthProvider.newBuilder("github.com").build() }
-    single { Firebase.storage }
-    single { Firebase.firestore }
+    factory(named("GitHubProvider")) { OAuthProvider.newBuilder("github.com").build() }
 
-    viewModel { MainViewModel(get()) }
-    viewModel { TravelListViewModel(get(), get(named("UserTravels"))) }
+    viewModel { MainViewModel(get(), get(named("UserTravels"))) }
+    viewModel { TravelListViewModel(get(), get(named("UserTravels")), get()) }
     viewModel { TravelDetailViewModel(get(named("UserTravels"))) }
-    viewModel { FilterParamsViewModel() }
+    viewModel { FilterParamsViewModel(get()) }
     viewModel { SelectedTravelsViewModel(get(), get(named("UserTravels"))) }
-    viewModel { LoginViewModel(get(), get(named("GitHubProvider"))) }
+    viewModel { LoginViewModel(get(), get(named("GitHubProvider")), get()) }
     viewModel { RegisterViewModel(get()) }
-    viewModel { NewTravelViewModel(get(), get()) }
+    viewModel { NewTravelViewModel(get()) }
 }
 
 class App : Application() {

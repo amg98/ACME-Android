@@ -2,38 +2,99 @@ package com.dam.acmeexplorer.viewmodels
 
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dam.acmeexplorer.R
 import com.dam.acmeexplorer.activities.TravelDetailActivity
+import com.dam.acmeexplorer.extensions.tryRequestLocationUpdates
+import com.dam.acmeexplorer.models.FilterParams
 import com.dam.acmeexplorer.models.Travel
-import com.dam.acmeexplorer.providers.TravelProvider
-import kotlinx.coroutines.Dispatchers
+import com.dam.acmeexplorer.repositories.FilterRepository
+import com.dam.acmeexplorer.repositories.TravelRepository
+import com.dam.acmeexplorer.utils.Units
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
-class TravelListViewModel(private val travelProvider: TravelProvider, private val userTravels: MutableMap<String, Boolean>) : ViewModel() {
+class TravelListViewModel(private val travelRepository: TravelRepository,
+                          private val userTravels: MutableMap<String, Boolean>,
+                          private val filterRepository: FilterRepository) : ViewModel() {
 
     private val _travels = MutableLiveData(listOf<Travel>())
     val travels: LiveData<List<Travel>> get() = _travels
 
-    fun requestTravels() {
-        viewModelScope.launch {
-            _travels.value = travelProvider.getTravels()
+    private val _loading = MutableLiveData(false)
+    val loading: LiveData<Boolean> get() = _loading
+
+    private val _toastMessage = MutableLiveData<String>()
+    val toastMessage: LiveData<String> get() = _toastMessage
+
+    private val _travelDistances = MutableLiveData<MutableList<Double>>(mutableListOf())
+    val travelDistances: LiveData<MutableList<Double>> get() = _travelDistances
+
+    private val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult?) {
+            locationResult ?: return
+            val location = locationResult.lastLocation
+            if(travelDistances.value!!.size == 0) return
+
+            travels.value?.forEachIndexed { i, travel ->
+                val travelLocation = Location("")
+                travelLocation.latitude = travel.weather!!.coords.latitude
+                travelLocation.longitude = travel.weather.coords.longitude
+                _travelDistances.value!![i] = location.distanceTo(travelLocation) * Units.M_TO_KM
+            }
+
+            // Notify the activity
+            _travelDistances.value = _travelDistances.value
         }
     }
 
-    fun requestTravels(startDate: Date, endDate: Date, minPrice: Int, maxPrice: Int) {
+    fun startLocation(locationServices: FusedLocationProviderClient) {
+        locationServices.tryRequestLocationUpdates(locationCallback)
+    }
+
+    fun stopLocation(locationServices: FusedLocationProviderClient) {
+        locationServices.removeLocationUpdates(locationCallback)
+    }
+
+    fun requestTravels(context: Context, filterParams: FilterParams? = null) {
         viewModelScope.launch {
-            _travels.value = travelProvider.getTravels(startDate, endDate, minPrice, maxPrice)
+
+            _loading.value = true
+
+            val params = filterParams ?: filterRepository.loadFilter(context)
+
+            val travels = if(params == null) {
+                travelRepository.getTravels()
+            } else {
+                travelRepository.getTravels(params)
+            }
+
+            _loading.value = false
+
+            if(travels == null) {
+                _toastMessage.value = context.getString(R.string.errorGettingTravels)
+                return@launch
+            }
+
+            _travelDistances.value = MutableList(travels.size) { -1.0 }
+            _travels.value = travels
         }
+    }
+
+    fun saveFilter(context: Context, filterParams: FilterParams) {
+        filterRepository.saveFilter(context, filterParams)
     }
 
     fun getTravelIntent(context: Context, position: Int): Intent {
         return Intent(context, TravelDetailActivity::class.java).apply {
-            putExtra("TRAVEL", travels.value!![position])
+            putExtra(TravelDetailActivity.INTENT_TRAVEL, travels.value!![position])
         }
     }
 

@@ -13,4 +13,4 @@ data class Travel(val id: String,
                   val endDate: Date,
                   val price: Int,
                   val startPlace: String,
-                  val weather: OpenWeatherResponse) : Parcelable
+                  val weather: OpenWeatherResponse? = null) : Parcelable

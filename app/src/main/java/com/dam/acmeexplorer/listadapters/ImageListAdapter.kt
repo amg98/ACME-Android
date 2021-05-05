@@ -8,7 +8,7 @@ import com.dam.acmeexplorer.R
 import com.dam.acmeexplorer.databinding.ImageItemBinding
 import com.squareup.picasso.Picasso
 
-class ImageListAdapter(private val images: List<String>, private val onClickItem: (pos: Int, isAdd: Boolean) -> Unit)
+class ImageListAdapter(private val images: List<String>, private val onClickItem: (pos: Int) -> Unit)
     : RecyclerView.Adapter<ImageListAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -17,15 +17,15 @@ class ImageListAdapter(private val images: List<String>, private val onClickItem
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(images[position], position, position == itemCount - 1)
+        holder.bind(images[position], position)
     }
 
     override fun getItemCount(): Int = images.size
 
-    class ViewHolder(private val binding: ImageItemBinding, private val onClickItem: (pos: Int, isAdd: Boolean) -> Unit)
+    class ViewHolder(private val binding: ImageItemBinding, private val onClickItem: (pos: Int) -> Unit)
         : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(imageURL: String, position: Int, isAdd: Boolean) {
+        fun bind(imageURL: String, position: Int) {
             with(binding) {
 
                 if(imageURL == "") {
@@ -35,7 +35,7 @@ class ImageListAdapter(private val images: List<String>, private val onClickItem
                 }
 
                 card.setOnClickListener {
-                    onClickItem(position, isAdd)
+                    onClickItem(position)
                 }
             }
         }

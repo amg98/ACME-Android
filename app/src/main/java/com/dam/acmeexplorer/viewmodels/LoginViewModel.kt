@@ -9,12 +9,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.dam.acmeexplorer.R
+import com.dam.acmeexplorer.extensions.showYesNoDialog
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.*
 
 
-class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider: OAuthProvider) : ViewModel() {
+class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider: OAuthProvider, private val gso: GoogleSignInOptions) : ViewModel() {
 
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> get() = _toastMessage
@@ -30,12 +32,16 @@ class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider:
 
     fun isLogged() = auth.currentUser != null
 
+    fun getGoogleSignInIntent(activity: Activity): Intent {
+        return GoogleSignIn.getClient(activity, gso).signInIntent
+    }
+
     fun login(activity: Activity, email: String, password: String, onComplete: () -> Unit) {
 
         if(!validateForm(activity, email, password)) return
 
         _loadingWheel.value = true
-        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(activity) { it ->
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(activity) {
             _loadingWheel.value = false
 
             if(!it.isSuccessful) {
@@ -44,8 +50,15 @@ class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider:
             }
 
             val user = it.result?.user
-            if(!user?.isEmailVerified!!) {
-                sendConfirmationEmail(activity, user)
+            if(user == null) {
+                _toastMessage.value = activity.getString(R.string.loginError)
+                return@addOnCompleteListener
+            }
+
+            if(!user.isEmailVerified) {
+                activity.showYesNoDialog(activity.getString(R.string.emailVerificationQuestion)) {
+                    sendConfirmationEmail(activity, user)
+                }
                 return@addOnCompleteListener
             }
 
@@ -54,18 +67,13 @@ class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider:
     }
 
     private fun sendConfirmationEmail(activity: Activity, user: FirebaseUser) {
-        AlertDialog.Builder(activity).setMessage(R.string.emailVerificationQuestion)
-                .setPositiveButton(R.string.yes) { _, _ ->
-                    user.sendEmailVerification().addOnCompleteListener {
-                        if(it.isSuccessful) {
-                            _toastMessage.value = activity.getString(R.string.verificationMailSent)
-                        } else {
-                            _toastMessage.value = activity.getString(R.string.verificationMailNotSent)
-                        }
-                    }
-                }
-                .setNegativeButton(R.string.no) { _, _ -> { }}
-                .show()
+        user.sendEmailVerification().addOnCompleteListener {
+            if(it.isSuccessful) {
+                _toastMessage.value = activity.getString(R.string.verificationMailSent)
+            } else {
+                _toastMessage.value = activity.getString(R.string.verificationMailNotSent)
+            }
+        }
     }
 
     private fun validateForm(activity: Activity, email: String, password: String): Boolean {
@@ -81,21 +89,26 @@ class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider:
     }
 
     fun googleLogin(activity: Activity, intent: Intent, onComplete: () -> Unit) {
-        val accountTask = GoogleSignIn.getSignedInAccountFromIntent(intent)
+
         _loadingWheel.value = true
+
         try {
+            val accountTask = GoogleSignIn.getSignedInAccountFromIntent(intent)
             val account = accountTask.getResult(ApiException::class.java)!!
             val idToken = account.idToken!!
             val credential = GoogleAuthProvider.getCredential(idToken, null)
+
             auth.signInWithCredential(credential).addOnCompleteListener(activity) { task ->
                 _loadingWheel.value = false
-                if (task.isSuccessful) {
-                    onComplete()
-                } else {
+
+                if (!task.isSuccessful) {
                     _toastMessage.value = activity.getString(R.string.loginError)
+                    return@addOnCompleteListener
                 }
+
+                onComplete()
             }
-        } catch (e: ApiException) {
+        } catch (e: Exception) {
             _loadingWheel.value = false
             _toastMessage.value = activity.getString(R.string.loginError)
         }

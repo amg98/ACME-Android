@@ -3,25 +3,28 @@ package com.dam.acmeexplorer.activities
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.dam.acmeexplorer.R
 import com.dam.acmeexplorer.databinding.ActivitySelectedTravelsBinding
+import com.dam.acmeexplorer.extensions.showMessage
+import com.dam.acmeexplorer.extensions.tryRequestLocationUpdates
 import com.dam.acmeexplorer.listadapters.TravelListAdapter
 import com.dam.acmeexplorer.viewmodels.SelectedTravelsViewModel
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import org.koin.android.viewmodel.ext.android.viewModel
 
 class SelectedTravelsActivity : AppCompatActivity() {
 
     private val vm: SelectedTravelsViewModel by viewModel()
     private lateinit var binding: ActivitySelectedTravelsBinding
-    private lateinit var travelDistances: MutableList<Double>
+    private lateinit var locationServices: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        locationServices = LocationServices.getFusedLocationProviderClient(this)
 
         binding = ActivitySelectedTravelsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -29,20 +32,41 @@ class SelectedTravelsActivity : AppCompatActivity() {
         with(binding) {
             vm.travels.observe(this@SelectedTravelsActivity) {
 
-                travelDistances = MutableList(it.size) { 0.0 }
-
-                travelList.adapter = TravelListAdapter(this@SelectedTravelsActivity, it, vm.userTravels, travelDistances) { travelPos: Int, checkboxClicked: Boolean ->
+                travelList.adapter = TravelListAdapter(this@SelectedTravelsActivity, it, vm.userTravels, vm.travelDistances.value!!) { travelPos: Int, checkboxClicked: Boolean ->
                     onItemClick(travelPos, checkboxClicked)
                 }
 
                 if(it.size > 0) {
-                    Toast.makeText(this@SelectedTravelsActivity, "Hay ${it.size} viajes seleccionados", Toast.LENGTH_SHORT).show()
-                    getLocation()
+                    showMessage(getString(R.string.selectedTravels, it.size))
                 }
+            }
+
+            vm.travelDistances.observe(this@SelectedTravelsActivity) {
+                travelList.adapter?.notifyDataSetChanged()
+            }
+
+            vm.toastMessage.observe(this@SelectedTravelsActivity) {
+                showMessage(it)
+            }
+
+            vm.loading.observe(this@SelectedTravelsActivity) {
+                progressBar.visibility = if(it) View.VISIBLE else View.GONE
             }
         }
 
-        vm.requestTravels()
+        vm.requestTravels(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if(vm.userTravels.isNotEmpty()) {
+            vm.startLocation(locationServices)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        vm.stopLocation(locationServices)
     }
 
     private fun onItemClick(travelPos: Int, checkboxClicked: Boolean): Boolean {
@@ -62,38 +86,5 @@ class SelectedTravelsActivity : AppCompatActivity() {
         }
 
         return false
-    }
-
-    private val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult?) {
-            locationResult ?: return
-            val location = locationResult.lastLocation
-
-            if(travelDistances.size == 0) return
-
-            vm.travels.value?.forEachIndexed { i, travel ->
-                val travelLocation = Location("")
-                travelLocation.latitude = travel.weather.coords.latitude
-                travelLocation.longitude = travel.weather.coords.longitude
-                travelDistances[i] = location.distanceTo(travelLocation) / 1000.0
-            }
-
-            binding.travelList.adapter?.notifyDataSetChanged()
-        }
-    }
-
-    private fun getLocation() {
-        try {
-            val req = LocationRequest.create()
-            req.interval = 5000
-            req.priority = LocationRequest.PRIORITY_LOW_POWER
-            req.smallestDisplacement = 5.0f
-
-            val locationServices = LocationServices.getFusedLocationProviderClient(this)
-            locationServices.requestLocationUpdates(req, locationCallback, Looper.getMainLooper())
-
-        } catch (e: SecurityException) {
-            // TODO
-        }
     }
 }

@@ -7,16 +7,20 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dam.acmeexplorer.R
+import com.dam.acmeexplorer.extensions.formatted
+import com.dam.acmeexplorer.extensions.uploadFile
+import com.dam.acmeexplorer.models.Travel
+import com.dam.acmeexplorer.repositories.TravelRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.logging.Level.parse
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class NewTravelViewModel(private val storage: FirebaseStorage, private val db: FirebaseFirestore) : ViewModel() {
+class NewTravelViewModel(private val travelRepository: TravelRepository) : ViewModel() {
 
     val startDate: Calendar = Calendar.getInstance()
     val endDate: Calendar = Calendar.getInstance()
@@ -26,81 +30,57 @@ class NewTravelViewModel(private val storage: FirebaseStorage, private val db: F
 
     val images = mutableListOf("")
 
-    fun formatDate(date: Calendar): String {
-        return SimpleDateFormat("dd/MM/yyyy", Locale.US).format(date.time)
-    }
-
-    fun onStartDate(day: Int, month: Int, year: Int): String {
+    fun setStartDate(day: Int, month: Int, year: Int): String {
         startDate.set(Calendar.YEAR, year)
         startDate.set(Calendar.MONTH, month)
         startDate.set(Calendar.DAY_OF_MONTH, day)
 
-        return formatDate(startDate)
+        return startDate.formatted()
     }
 
-    fun onEndDate(day: Int, month: Int, year: Int): String {
+    fun setEndDate(day: Int, month: Int, year: Int): String {
         endDate.set(Calendar.YEAR, year)
         endDate.set(Calendar.MONTH, month)
         endDate.set(Calendar.DAY_OF_MONTH, day)
 
-        return formatDate(endDate)
+        return endDate.formatted()
     }
 
-    fun submitTravel(context: Context, destination: String, price: Int, startPlace: String, onDone: () -> Unit) {
+    fun submitTravel(context: Context, destination: String, price: String, startPlace: String, onDone: () -> Unit) {
+
+        if(!validateTravel(context, destination, price, startPlace)) return
+
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val travel = Travel("", destination, images, startDate.time, endDate.time, Integer.parseInt(price), startPlace)
+
+            if(travelRepository.addTravel(travel)) {
+                onDone()
+            } else {
+                _toastMessage.value = context.getString(R.string.travelCreationError)
+            }
+        }
+    }
+
+    private fun validateTravel(context: Context, destination: String, price: String, startPlace: String): Boolean {
         if(destination.isEmpty()) {
             _toastMessage.value = context.getString(R.string.destinyEmpty)
-            return
+            return false
         }
-        if(price < 0) {
+        if(price.isEmpty()) {
             _toastMessage.value = context.getString(R.string.priceEmpty)
-            return
+            return false
         }
         if(startPlace.isEmpty()) {
             _toastMessage.value = context.getString(R.string.startPlaceEmpty)
-            return
+            return false
         }
         if(images.size == 1) {
             _toastMessage.value = context.getString(R.string.atLeastOneImage)
-            return
+            return false
         }
 
-        viewModelScope.launch {
-
-            // Save files to Firebase Storage
-            val uploadedImages = images
-                .filter { it != "" }
-                .mapIndexed { i, fileUri -> async { uploadFile(Uri.parse(fileUri), destination, i) } }
-                .map { it.await() }
-
-            var hasErrors = false
-            uploadedImages.forEach {
-                if(it == null) hasErrors = true
-            }
-
-            if(hasErrors) {
-                _toastMessage.value = context.getString(R.string.uploadImagesError)
-                return@launch
-            }
-
-            // Create travel object
-            val travel = hashMapOf(
-                "title" to destination,
-                "startDate" to formatDate(startDate),
-                "endDate" to formatDate(endDate),
-                "price" to price,
-                "startPlace" to startPlace,
-                "images" to uploadedImages
-            )
-
-            // Create travel in Firebase Firestore
-            db.collection("travels").add(travel)
-                .addOnSuccessListener {
-                    onDone()
-                }
-                .addOnFailureListener {
-                    _toastMessage.value = context.getString(R.string.travelCreationError)
-                }
-        }
+        return true
     }
 
     fun pushNewImage(fileUri: Uri) {
@@ -109,16 +89,5 @@ class NewTravelViewModel(private val storage: FirebaseStorage, private val db: F
 
     fun changeImage(imagePos: Int, fileUri: Uri) {
         images[imagePos] = fileUri.toString()
-    }
-
-    private suspend fun uploadFile(fileUri: Uri, folder: String, id: Int): String? = suspendCoroutine { cont ->
-        val refString = "{$folder}/{$id}"
-        val uploadTask = storage.reference.child(refString).putFile(fileUri)
-        uploadTask.addOnSuccessListener {
-            cont.resume(refString)
-        }
-        uploadTask.addOnFailureListener {
-            cont.resume(null)
-        }
     }
 }

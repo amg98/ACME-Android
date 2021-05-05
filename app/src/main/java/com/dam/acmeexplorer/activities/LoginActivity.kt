@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.dam.acmeexplorer.R
 import com.dam.acmeexplorer.databinding.ActivityLoginBinding
 import com.dam.acmeexplorer.databinding.ActivityMainBinding
+import com.dam.acmeexplorer.extensions.showMessage
 import com.dam.acmeexplorer.viewmodels.LoginViewModel
 import com.dam.acmeexplorer.viewmodels.MainViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -23,11 +24,10 @@ class LoginActivity : AppCompatActivity() {
 
     private val vm: LoginViewModel by viewModel()
     private lateinit var binding: ActivityLoginBinding
-    private val gso: GoogleSignInOptions by inject()
 
     companion object {
-        const val RESULT_USER_EMAIL_LABEL = "user_email"
-        const val RESULT_USER_PASSWORD_LABEL = "user_password"
+        const val RESULT_USER_EMAIL = "user_email"
+        const val RESULT_USER_PASSWORD = "user_password"
     }
 
     private val registerUser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -35,8 +35,8 @@ class LoginActivity : AppCompatActivity() {
 
         val data = result.data?.extras ?: return@registerForActivityResult
 
-        val userEmail = data.get(RESULT_USER_EMAIL_LABEL) as String
-        val userPassword = data.get(RESULT_USER_PASSWORD_LABEL) as String
+        val userEmail = data.get(RESULT_USER_EMAIL) as String
+        val userPassword = data.get(RESULT_USER_PASSWORD) as String
 
         with(binding) {
             emailInputAc.setText(userEmail)
@@ -70,8 +70,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             googleLogin.setOnClickListener {
-                val client = GoogleSignIn.getClient(this@LoginActivity, gso)
-                loginWithGoogle.launch(client.signInIntent)
+                loginWithGoogle.launch(vm.getGoogleSignInIntent(this@LoginActivity))
             }
 
             githubLogin.setOnClickListener {
@@ -82,12 +81,12 @@ class LoginActivity : AppCompatActivity() {
 
             registerButton.setOnClickListener {
                 val intent = Intent(this@LoginActivity, RegisterActivity::class.java)
-                intent.putExtra(RegisterActivity.INTENT_EMAIL_LABEL, emailInputAc.text.toString())
+                intent.putExtra(RegisterActivity.INTENT_EMAIL, emailInputAc.text.toString())
                 registerUser.launch(intent)
             }
 
             vm.toastMessage.observe(this@LoginActivity) {
-                Toast.makeText(this@LoginActivity, it, Toast.LENGTH_SHORT).show()
+                showMessage(it)
             }
 
             vm.loadingWheel.observe(this@LoginActivity) {

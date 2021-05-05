@@ -9,8 +9,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dam.acmeexplorer.R
 import com.dam.acmeexplorer.databinding.TravelItemBinding
 import com.dam.acmeexplorer.databinding.TravelItemSmallBinding
+import com.dam.acmeexplorer.extensions.formatted
 import com.dam.acmeexplorer.models.Travel
+import com.dam.acmeexplorer.utils.Units
 import com.squareup.picasso.Picasso
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,13 +36,12 @@ class TravelListAdapter(private val context: Context, private val travels: List<
 
         fun bind(travel: Travel, position: Int, distance: Double) {
             with(binding) {
-                val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
                 travelTitle.text = travel.title
-                travelStartDate.text = context.getString(R.string.start_date, dateFormatter.format(travel.startDate))
-                travelEndDate.text = context.getString(R.string.end_date, dateFormatter.format(travel.endDate))
+                travelStartDate.text = context.getString(R.string.start_date, travel.startDate.formatted())
+                travelEndDate.text = context.getString(R.string.end_date, travel.endDate.formatted())
                 travelPrice.text = context.getString(R.string.price, travel.price)
-                distanceText.text = context.getString(R.string.distanceText, distance)
+                distanceText.text = context.getString(R.string.distanceText, if(distance < Units.MIN_DISTANCE) context.getString(R.string.loading) else DecimalFormat("#.##").format(distance))
 
                 Picasso.with(context)
                         .load(travel.imagesURL[0])
