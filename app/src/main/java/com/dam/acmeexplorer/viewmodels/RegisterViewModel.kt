@@ -30,7 +30,10 @@ class RegisterViewModel(private val auth: FirebaseAuth) : ViewModel() {
 
         _loadingWheel.value = true
 
-        if(!validateForm(activity, email, password, repeatPassword)) return
+        if(!validateForm(activity, email, password, repeatPassword)) {
+            _loadingWheel.value = false
+            return
+        }
 
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(activity) {
 

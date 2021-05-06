@@ -67,7 +67,9 @@ class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider:
     }
 
     private fun sendConfirmationEmail(activity: Activity, user: FirebaseUser) {
+        _loadingWheel.value = true
         user.sendEmailVerification().addOnCompleteListener {
+            _loadingWheel.value = false
             if(it.isSuccessful) {
                 _toastMessage.value = activity.getString(R.string.verificationMailSent)
             } else {
@@ -115,17 +117,28 @@ class LoginViewModel(private val auth: FirebaseAuth, private val githubProvider:
     }
 
     fun githubLogin(activity: Activity, onComplete: () -> Unit) {
+
+        _loadingWheel.value = true
         val pendingResultTask = auth.pendingAuthResult
+
         if(pendingResultTask != null) {
             pendingResultTask
-                    .addOnSuccessListener { onComplete() }
+                    .addOnSuccessListener {
+                        _loadingWheel.value = false
+                        onComplete()
+                    }
                     .addOnFailureListener {
+                        _loadingWheel.value = false
                         _toastMessage.value = activity.getString(R.string.loginError)
                     }
         } else {
             auth.startActivityForSignInWithProvider(activity, githubProvider)
-                    .addOnSuccessListener { onComplete() }
+                    .addOnSuccessListener {
+                        _loadingWheel.value = false
+                        onComplete()
+                    }
                     .addOnFailureListener{
+                        _loadingWheel.value = false
                         if(it is FirebaseAuthUserCollisionException) {
                             _toastMessage.value = activity.getString(R.string.userCollision)
                         } else {
