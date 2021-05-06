@@ -47,7 +47,7 @@ class TravelDetailActivity : AppCompatActivity() {
         val travel = intent.getParcelableExtra<Travel>(INTENT_TRAVEL)
         val buyEnabled = intent.getBooleanExtra(INTENT_BUY, false)
 
-        vm.setTravelLocation(travel.weather!!.coords.latitude, travel.weather.coords.longitude)
+        vm.setTravelLocation(travel.weather.coords.latitude, travel.weather.coords.longitude)
         vm.updateSelectButton(this, travel.id, buyEnabled)
 
         binding = ActivityTravelDetailBinding.inflate(layoutInflater)
@@ -95,7 +95,7 @@ class TravelDetailActivity : AppCompatActivity() {
             }
 
             vm.distance.observe(this@TravelDetailActivity) {
-                distance.text = getString(R.string.distanceText, if(it < Units.MIN_DISTANCE) getString(R.string.loading) else DecimalFormat("#.##").format(distance))
+                distance.text = getString(R.string.distanceText, if(it < Units.MIN_DISTANCE) getString(R.string.loading) else DecimalFormat("#.##").format(it))
             }
         }
 

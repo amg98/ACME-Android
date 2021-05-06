@@ -7,9 +7,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dam.acmeexplorer.R
+import com.dam.acmeexplorer.exceptions.AlertException
 import com.dam.acmeexplorer.extensions.formatted
 import com.dam.acmeexplorer.extensions.uploadFile
 import com.dam.acmeexplorer.models.Travel
+import com.dam.acmeexplorer.models.TravelUpload
 import com.dam.acmeexplorer.repositories.TravelRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -50,14 +52,15 @@ class NewTravelViewModel(private val travelRepository: TravelRepository) : ViewM
 
         if(!validateTravel(context, destination, price, startPlace)) return
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
 
-            val travel = Travel("", destination, images, startDate.time, endDate.time, Integer.parseInt(price), startPlace)
+            val travel = TravelUpload(destination, images, startDate.time, endDate.time, Integer.parseInt(price), startPlace)
 
-            if(travelRepository.addTravel(travel)) {
+            try {
+                withContext(Dispatchers.IO) { travelRepository.addTravel(travel) }
                 onDone()
-            } else {
-                _toastMessage.value = context.getString(R.string.travelCreationError)
+            } catch(e: AlertException) {
+                _toastMessage.value = e.asString(context)
             }
         }
     }

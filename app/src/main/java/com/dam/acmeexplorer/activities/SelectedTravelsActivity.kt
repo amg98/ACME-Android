@@ -38,11 +38,12 @@ class SelectedTravelsActivity : AppCompatActivity() {
 
                 if(it.size > 0) {
                     showMessage(getString(R.string.selectedTravels, it.size))
+                    vm.startLocation(locationServices)
                 }
             }
 
             vm.travelDistances.observe(this@SelectedTravelsActivity) {
-                travelList.adapter?.notifyDataSetChanged()
+                travelList.adapter?.notifyItemRangeChanged(0, it.size)
             }
 
             vm.toastMessage.observe(this@SelectedTravelsActivity) {
@@ -59,7 +60,7 @@ class SelectedTravelsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if(vm.userTravels.isNotEmpty()) {
+        if(vm.travels.value!!.isNotEmpty()) {
             vm.startLocation(locationServices)
         }
     }

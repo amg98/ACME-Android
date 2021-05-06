@@ -34,6 +34,7 @@ class TravelListActivity : AppCompatActivity() {
     private val userTravels: MutableMap<String, Boolean> by inject(named("UserTravels"))
     private var itemCheckedState = false
     private var selectedItem = NO_ITEM_SELECTED
+    private var addingItem = false
     private lateinit var locationServices: FusedLocationProviderClient
 
     companion object {
@@ -87,6 +88,7 @@ class TravelListActivity : AppCompatActivity() {
             }
 
             addButton.setOnClickListener {
+                addingItem = true
                 startActivity(Intent(this@TravelListActivity, NewTravelActivity::class.java))
             }
 
@@ -99,7 +101,7 @@ class TravelListActivity : AppCompatActivity() {
             }
 
             vm.travelDistances.observe(this@TravelListActivity) {
-                travelList.adapter?.notifyDataSetChanged()
+                travelList.adapter?.notifyItemRangeChanged(0, it.size)
             }
         }
 
@@ -109,6 +111,10 @@ class TravelListActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         refreshList()
+        if(addingItem) {
+            vm.requestTravels(this)
+            addingItem = false
+        }
     }
 
     override fun onResume() {

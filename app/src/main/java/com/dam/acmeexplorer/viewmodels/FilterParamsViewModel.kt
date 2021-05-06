@@ -3,6 +3,7 @@ package com.dam.acmeexplorer.viewmodels
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -56,8 +57,8 @@ class FilterParamsViewModel(private val filterRepository: FilterRepository) : Vi
         val intent = Intent()
         intent.putExtra(TravelListActivity.RESULT_START_DATE, startDate)
         intent.putExtra(TravelListActivity.RESULT_END_DATE, endDate)
-        intent.putExtra(TravelListActivity.RESULT_MIN_PRICE, minPrice)
-        intent.putExtra(TravelListActivity.RESULT_MAX_PRICE, maxPrice)
+        intent.putExtra(TravelListActivity.RESULT_MIN_PRICE, minPriceVal)
+        intent.putExtra(TravelListActivity.RESULT_MAX_PRICE, maxPriceVal)
         return intent
     }
 

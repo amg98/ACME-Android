@@ -19,7 +19,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
 
-class MainViewModel(private val auth: FirebaseAuth, private val userTravels: MutableMap<Int, Boolean>) : ViewModel() {
+class MainViewModel(private val auth: FirebaseAuth, private val userTravels: MutableMap<String, Boolean>) : ViewModel() {
 
     companion object {
         const val BUNDLE_USER_TRAVELS = "UserTravels"
@@ -71,13 +71,13 @@ class MainViewModel(private val auth: FirebaseAuth, private val userTravels: Mut
     }
 
     fun saveUserTravels(bundle: Bundle) {
-        val travelIDs = ArrayList<Int>()
+        val travelIDs = ArrayList<String>()
         travelIDs.addAll(userTravels.keys)
-        bundle.putIntegerArrayList(BUNDLE_USER_TRAVELS, travelIDs)
+        bundle.putStringArrayList(BUNDLE_USER_TRAVELS, travelIDs)
     }
 
     fun loadUserTravels(bundle: Bundle) {
-        val travelIDs = bundle.getIntegerArrayList(BUNDLE_USER_TRAVELS)
+        val travelIDs = bundle.getStringArrayList(BUNDLE_USER_TRAVELS)
         userTravels.clear()
         travelIDs?.forEach {
             userTravels[it] = true

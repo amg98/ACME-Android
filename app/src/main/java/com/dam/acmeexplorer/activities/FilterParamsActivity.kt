@@ -39,6 +39,8 @@ class FilterParamsActivity : AppCompatActivity() {
             vm.loadFilter(this@FilterParamsActivity) { minPriceVal, maxPriceVal ->
                 minPrice.setText(minPriceVal.toString())
                 maxPrice.setText(maxPriceVal.toString())
+                startDate.setText(vm.startDate.formatted())
+                endDate.setText(vm.endDate.formatted())
             }
 
             startDate.setOnClickListener {

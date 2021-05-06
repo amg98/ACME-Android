@@ -53,7 +53,7 @@
     <string name="pressureText">Presión: %1$.2f bar</string>
     <string name="humidityText">Humedad: %1$d %%</string>
     <string name="windSpeedText">Viento: %1$.2f km/h</string>
-    <string name="distanceText">Distancia: %1$s km</string>
+    <string name="distanceText">A %1$s km</string>
     <string name="validation_priceRange">El rango de precios no es coherente</string>
     <string name="locationPermissionText">Esta aplicación puede usar tu ubicación para mostrarla y visualizar la distancia a los viajes. ¿Quieres permitir su uso para este fin?</string>
     <string name="loading">Cargando</string>
@@ -64,4 +64,8 @@
     <string name="buyText">Comprar</string>
     <string name="removeText">Eliminar</string>
     <string name="buyTimeText">Ha llegado el momento de la compra</string>
+    <string name="weatherError">No se ha podido obtener la información meteorológica</string>
+    <string name="serverEmptyResponse">El servidor ha respondido sin datos</string>
+    <string name="imageDownloadError">No se ha podido descargar una imagen</string>
+    <string name="fileUploadError">No se ha podido subir un archivo</string>
 </resources>

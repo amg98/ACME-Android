@@ -39,6 +39,7 @@ class NewTravelActivity : AppCompatActivity() {
         if(selectedImage == NO_IMAGE_SELECTED) {
             vm.pushNewImage(fileUri)
             binding.imagesList.adapter?.notifyItemInserted(0)
+            binding.imagesList.adapter?.notifyItemRangeChanged(0, vm.images.size)
         } else {
             vm.changeImage(selectedImage, fileUri)
             binding.imagesList.adapter?.notifyItemChanged(selectedImage)
@@ -69,7 +70,7 @@ class NewTravelActivity : AppCompatActivity() {
             }
 
             imagesList.adapter = ImageListAdapter(vm.images) { imagePos: Int ->
-                selectedImage = if(imagePos == vm.images.size - 1) NO_IMAGE_SELECTED else imagePos
+                selectedImage = if(vm.images[imagePos] == "") NO_IMAGE_SELECTED else imagePos
                 showFileChooser(getFile, getString(R.string.selectImageText), "image/*")
             }
 

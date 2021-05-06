@@ -3,12 +3,14 @@ package com.dam.acmeexplorer.viewmodels
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dam.acmeexplorer.R
 import com.dam.acmeexplorer.activities.TravelDetailActivity
+import com.dam.acmeexplorer.exceptions.AlertException
 import com.dam.acmeexplorer.extensions.tryRequestLocationUpdates
 import com.dam.acmeexplorer.models.Travel
 import com.dam.acmeexplorer.repositories.TravelRepository
@@ -18,6 +20,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SelectedTravelsViewModel(private val travelRepository: TravelRepository, val userTravels: MutableMap<String, Boolean>)
     : ViewModel() {
@@ -39,11 +42,11 @@ class SelectedTravelsViewModel(private val travelRepository: TravelRepository, v
             locationResult ?: return
             val location = locationResult.lastLocation
 
-            if(travelDistances.value!!.size == 0) return
+            if(travelDistances.value!!.isEmpty()) return
 
             travels.value?.forEachIndexed { i, travel ->
                 val travelLocation = Location("")
-                travelLocation.latitude = travel.weather!!.coords.latitude
+                travelLocation.latitude = travel.weather.coords.latitude
                 travelLocation.longitude = travel.weather.coords.longitude
                 _travelDistances.value!![i] = location.distanceTo(travelLocation) * Units.M_TO_KM
             }
@@ -61,27 +64,25 @@ class SelectedTravelsViewModel(private val travelRepository: TravelRepository, v
         locationServices.removeLocationUpdates(locationCallback)
     }
 
-    fun requestTravels(context: Context) {
+    fun requestTravels(context: Context) = viewModelScope.launch {
 
         if(userTravels.isEmpty()) {
             _toastMessage.value = context.getString(R.string.noSelectedTravels)
-            return
+            return@launch
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        try {
             _loading.value = true
-            val travels = travelRepository.getTravels(userTravels.keys)?.toMutableList()
 
-            if(travels == null) {
-                _loading.value = false
-                _toastMessage.value = context.getString(R.string.errorGettingTravels)
-                return@launch
-            }
+            val travels = withContext(Dispatchers.IO) { travelRepository.getTravels(userTravels.keys).toMutableList() }
 
             _travelDistances.value = MutableList(travels.size) { -1.0 }
-            _travels.value = travels!!
-            _loading.value = false
+            _travels.value = travels
+        } catch (e: AlertException) {
+            _toastMessage.value = e.asString(context)
         }
+
+        _loading.value = false
     }
 
     fun onCheckboxClicked(travelPos: Int) {

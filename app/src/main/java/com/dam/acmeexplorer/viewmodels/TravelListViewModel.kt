@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dam.acmeexplorer.R
 import com.dam.acmeexplorer.activities.TravelDetailActivity
+import com.dam.acmeexplorer.exceptions.AlertException
 import com.dam.acmeexplorer.extensions.tryRequestLocationUpdates
 import com.dam.acmeexplorer.models.FilterParams
 import com.dam.acmeexplorer.models.Travel
@@ -18,7 +19,9 @@ import com.dam.acmeexplorer.utils.Units
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class TravelListViewModel(private val travelRepository: TravelRepository,
@@ -45,7 +48,7 @@ class TravelListViewModel(private val travelRepository: TravelRepository,
 
             travels.value?.forEachIndexed { i, travel ->
                 val travelLocation = Location("")
-                travelLocation.latitude = travel.weather!!.coords.latitude
+                travelLocation.latitude = travel.weather.coords.latitude
                 travelLocation.longitude = travel.weather.coords.longitude
                 _travelDistances.value!![i] = location.distanceTo(travelLocation) * Units.M_TO_KM
             }
@@ -63,29 +66,27 @@ class TravelListViewModel(private val travelRepository: TravelRepository,
         locationServices.removeLocationUpdates(locationCallback)
     }
 
-    fun requestTravels(context: Context, filterParams: FilterParams? = null) {
-        viewModelScope.launch {
+    fun requestTravels(context: Context, filterParams: FilterParams? = null) = viewModelScope.launch {
 
-            _loading.value = true
+        _loading.value = true
 
-            val params = filterParams ?: filterRepository.loadFilter(context)
-
-            val travels = if(params == null) {
-                travelRepository.getTravels()
-            } else {
-                travelRepository.getTravels(params)
-            }
-
-            _loading.value = false
-
-            if(travels == null) {
-                _toastMessage.value = context.getString(R.string.errorGettingTravels)
-                return@launch
+        try {
+            val travels = withContext(Dispatchers.IO) {
+                val params = filterParams ?: filterRepository.loadFilter(context)
+                if(params == null) {
+                    travelRepository.getTravels()
+                } else {
+                    travelRepository.getTravels(params)
+                }
             }
 
             _travelDistances.value = MutableList(travels.size) { -1.0 }
             _travels.value = travels
+        } catch (e: AlertException) {
+            _toastMessage.value = e.asString(context)
         }
+
+        _loading.value = false
     }
 
     fun saveFilter(context: Context, filterParams: FilterParams) {
