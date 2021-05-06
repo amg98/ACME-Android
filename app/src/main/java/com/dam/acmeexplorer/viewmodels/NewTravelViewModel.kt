@@ -53,6 +53,7 @@ class NewTravelViewModel(private val travelRepository: TravelRepository) : ViewM
 
     fun submitTravel(context: Context, destination: String, price: String, startPlace: String, onDone: () -> Unit) {
 
+        _loading.value = true
         if(!validateTravel(context, destination, price, startPlace)) return
 
         viewModelScope.launch {
@@ -65,6 +66,8 @@ class NewTravelViewModel(private val travelRepository: TravelRepository) : ViewM
             } catch(e: AlertException) {
                 _toastMessage.value = e.asString(context)
             }
+
+            _loading.value = false
         }
     }
 
