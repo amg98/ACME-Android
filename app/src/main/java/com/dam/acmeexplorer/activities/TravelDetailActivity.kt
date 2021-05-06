@@ -95,7 +95,7 @@ class TravelDetailActivity : AppCompatActivity() {
             }
 
             vm.distance.observe(this@TravelDetailActivity) {
-                distance.text = getString(R.string.distanceText, if(it < Units.MIN_DISTANCE) getString(R.string.loading) else DecimalFormat("#.##").format(it))
+                distance.text = if(it < Units.MIN_DISTANCE) getString(R.string.loadingDistance) else getString(R.string.distanceText, DecimalFormat("#.##").format(it))
             }
         }
 

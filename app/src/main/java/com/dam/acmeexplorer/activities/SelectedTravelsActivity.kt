@@ -32,7 +32,7 @@ class SelectedTravelsActivity : AppCompatActivity() {
         with(binding) {
             vm.travels.observe(this@SelectedTravelsActivity) {
 
-                travelList.adapter = TravelListAdapter(this@SelectedTravelsActivity, it, vm.userTravels, vm.travelDistances.value!!) { travelPos: Int, checkboxClicked: Boolean ->
+                travelList.adapter = TravelListAdapter(this@SelectedTravelsActivity, it, vm.userTravels, vm.travelDistances.value!!) { travelPos: Int, checkboxClicked: Boolean, _ ->
                     onItemClick(travelPos, checkboxClicked)
                 }
 

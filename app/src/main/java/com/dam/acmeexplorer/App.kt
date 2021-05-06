@@ -20,9 +20,12 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+const val USER_TRAVELS = "UserTravels"
+const val GITHUB_PROVIDER = "GitHubProvider"
+
 val appModule = module {
 
-    single(named("UserTravels")) { mutableMapOf<String, Boolean>() }
+    single(named(USER_TRAVELS)) { mutableMapOf<String, Boolean>() }
     single { FirebaseAuth.getInstance() }
     single { Firebase.storage }
     single { Firebase.firestore }
@@ -38,14 +41,14 @@ val appModule = module {
             .requestIdToken(BuildConfig.GOOGLE_OAUTH_CLIENT_ID)
             .requestEmail()
             .build() }
-    factory(named("GitHubProvider")) { OAuthProvider.newBuilder("github.com").build() }
+    factory(named(GITHUB_PROVIDER)) { OAuthProvider.newBuilder("github.com").build() }
 
-    viewModel { MainViewModel(get(), get(named("UserTravels"))) }
-    viewModel { TravelListViewModel(get(), get(named("UserTravels")), get()) }
-    viewModel { TravelDetailViewModel(get(named("UserTravels"))) }
+    viewModel { MainViewModel(get(), get(named(USER_TRAVELS))) }
+    viewModel { TravelListViewModel(get(), get(named(USER_TRAVELS)), get()) }
+    viewModel { TravelDetailViewModel(get(named(USER_TRAVELS))) }
     viewModel { FilterParamsViewModel(get()) }
-    viewModel { SelectedTravelsViewModel(get(), get(named("UserTravels"))) }
-    viewModel { LoginViewModel(get(), get(named("GitHubProvider")), get()) }
+    viewModel { SelectedTravelsViewModel(get(), get(named(USER_TRAVELS))) }
+    viewModel { LoginViewModel(get(), get(named(GITHUB_PROVIDER)), get()) }
     viewModel { RegisterViewModel(get()) }
     viewModel { NewTravelViewModel(get()) }
 }

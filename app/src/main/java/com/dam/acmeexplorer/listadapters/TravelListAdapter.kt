@@ -17,7 +17,7 @@ import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-class TravelListAdapter(private val context: Context, private val travels: List<Travel>, private val userTravels: MutableMap<String, Boolean>, private val travelDistances: MutableList<Double>, private val onClickItem: (pos: Int, isCheckbox: Boolean) -> Boolean)
+class TravelListAdapter(private val context: Context, private val travels: List<Travel>, private val userTravels: MutableMap<String, Boolean>, private val travelDistances: MutableList<Double>, private val onClickItem: (pos: Int, isCheckbox: Boolean, checked: Boolean) -> Unit)
     : RecyclerView.Adapter<TravelListAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -31,7 +31,7 @@ class TravelListAdapter(private val context: Context, private val travels: List<
 
     override fun getItemCount(): Int = travels.size
 
-    class ViewHolder(private val binding: TravelItemBinding, private val context: Context, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean) -> Boolean)
+    class ViewHolder(private val binding: TravelItemBinding, private val context: Context, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean, checked: Boolean) -> Unit)
         : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(travel: Travel, position: Int, distance: Double) {
@@ -41,7 +41,7 @@ class TravelListAdapter(private val context: Context, private val travels: List<
                 travelStartDate.text = context.getString(R.string.start_date, travel.startDate.formatted())
                 travelEndDate.text = context.getString(R.string.end_date, travel.endDate.formatted())
                 travelPrice.text = context.getString(R.string.price, travel.price)
-                distanceText.text = context.getString(R.string.distanceText, if(distance < Units.MIN_DISTANCE) context.getString(R.string.loading) else DecimalFormat("#.##").format(distance))
+                distanceText.text = if(distance < Units.MIN_DISTANCE) context.getString(R.string.loadingDistance) else context.getString(R.string.distanceText, DecimalFormat("#.##").format(distance))
 
                 Picasso.with(context)
                         .load(travel.imagesURL[0])
@@ -54,11 +54,11 @@ class TravelListAdapter(private val context: Context, private val travels: List<
                 checkBox.isChecked = userTravels.contains(travel.id)
 
                 card.setOnClickListener {
-                    onClickItem(position, false)
+                    onClickItem(position, false, false)
                 }
 
-                checkBox.setOnCheckedChangeListener { _, _ ->
-                    checkBox.isChecked = onClickItem(position, true)
+                checkBox.setOnCheckedChangeListener { _, checked ->
+                    onClickItem(position, true, checked)
                 }
             }
         }

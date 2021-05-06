@@ -91,6 +91,7 @@ class LoginActivity : AppCompatActivity() {
 
             vm.loadingWheel.observe(this@LoginActivity) {
                 progressBar.visibility = if(it) View.VISIBLE else View.GONE
+                loginButton.isEnabled = !it
             }
 
             vm.emailErrors.observe(this@LoginActivity) {

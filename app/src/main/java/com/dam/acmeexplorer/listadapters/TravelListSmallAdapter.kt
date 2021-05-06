@@ -9,7 +9,7 @@ import com.dam.acmeexplorer.databinding.TravelItemSmallBinding
 import com.dam.acmeexplorer.models.Travel
 import com.squareup.picasso.Picasso
 
-class TravelListSmallAdapter(private val context: Context, private val travels: List<Travel>, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean) -> Unit)
+class TravelListSmallAdapter(private val context: Context, private val travels: List<Travel>, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean, checked: Boolean) -> Unit)
     : RecyclerView.Adapter<TravelListSmallAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -23,7 +23,7 @@ class TravelListSmallAdapter(private val context: Context, private val travels: 
 
     override fun getItemCount(): Int = travels.size
 
-    class ViewHolder(private val context: Context, private val binding: TravelItemSmallBinding, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean) -> Unit)
+    class ViewHolder(private val context: Context, private val binding: TravelItemSmallBinding, private val userTravels: MutableMap<String, Boolean>, private val onClickItem: (pos: Int, isCheckbox: Boolean, checked: Boolean) -> Unit)
         : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(travel: Travel, position: Int) {
@@ -41,11 +41,11 @@ class TravelListSmallAdapter(private val context: Context, private val travels: 
                 checkBox.isChecked = userTravels.contains(travel.id)
 
                 card.setOnClickListener {
-                    onClickItem(position, false)
+                    onClickItem(position, false, false)
                 }
 
-                checkBox.setOnCheckedChangeListener { _, _ ->
-                    onClickItem(position, true)
+                checkBox.setOnCheckedChangeListener { _, checked: Boolean ->
+                    onClickItem(position, true, checked)
                 }
             }
         }

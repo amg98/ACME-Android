@@ -32,7 +32,6 @@ class TravelListActivity : AppCompatActivity() {
     private val vm: TravelListViewModel by viewModel()
     private lateinit var binding: ActivityTravelListBinding
     private val userTravels: MutableMap<String, Boolean> by inject(named("UserTravels"))
-    private var itemCheckedState = false
     private var selectedItem = NO_ITEM_SELECTED
     private var addingItem = false
     private lateinit var locationServices: FusedLocationProviderClient
@@ -76,7 +75,7 @@ class TravelListActivity : AppCompatActivity() {
 
             vm.travels.observe(this@TravelListActivity) {
                 if(it.isNotEmpty()) vm.startLocation(locationServices)
-                setupList(it, binding.columnSwitch.isChecked)
+                setupList(it, columnSwitch.isChecked)
             }
 
             columnSwitch.setOnCheckedChangeListener { _, isChecked: Boolean ->
@@ -110,7 +109,7 @@ class TravelListActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        refreshList()
+        updateSelectedItem()
         if(addingItem) {
             vm.requestTravels(this)
             addingItem = false
@@ -130,12 +129,12 @@ class TravelListActivity : AppCompatActivity() {
     private fun setupList(travels: List<Travel>, smallItems: Boolean) {
         with(binding) {
             if(smallItems) {
-                travelList.adapter = TravelListSmallAdapter(this@TravelListActivity, travels, userTravels) { travelPos: Int, checkboxClicked: Boolean ->
-                    onItemClick(travelPos, checkboxClicked)
+                travelList.adapter = TravelListSmallAdapter(this@TravelListActivity, travels, userTravels) { travelPos: Int, checkboxClicked: Boolean, checked: Boolean ->
+                    onItemClick(travelPos, checkboxClicked, checked)
                 }
             } else {
-                travelList.adapter = TravelListAdapter(this@TravelListActivity, travels, userTravels, vm.travelDistances.value!!) { travelPos: Int, checkboxClicked: Boolean ->
-                    onItemClick(travelPos, checkboxClicked)
+                travelList.adapter = TravelListAdapter(this@TravelListActivity, travels, userTravels, vm.travelDistances.value!!) { travelPos: Int, checkboxClicked: Boolean, checked: Boolean ->
+                    onItemClick(travelPos, checkboxClicked, checked)
                 }
             }
 
@@ -143,27 +142,18 @@ class TravelListActivity : AppCompatActivity() {
         }
     }
 
-    private fun onItemClick(travelPos: Int, checkboxClicked: Boolean): Boolean {
+    private fun onItemClick(travelPos: Int, checkboxClicked: Boolean, checked: Boolean) {
         return if (checkboxClicked) {
-            vm.onCheckboxClicked(travelPos)
+            vm.onCheckboxClicked(travelPos, checked)
         } else {
-            val travels = vm.travels.value!!
             selectedItem = travelPos
-            itemCheckedState = userTravels.contains(travels[travelPos].id)
             startActivity(vm.getTravelIntent(this@TravelListActivity, travelPos))
-            true
         }
     }
 
-    private fun refreshList() {
+    private fun updateSelectedItem() {
         if(selectedItem == NO_ITEM_SELECTED) return
-        with(binding) {
-            val travels = vm.travels.value!!
-            val id = travels[selectedItem].id
-            if(itemCheckedState != userTravels.contains(id)) {
-                travelList.adapter!!.notifyItemChanged(selectedItem)
-                selectedItem = NO_ITEM_SELECTED
-            }
-        }
+        binding.travelList.adapter?.notifyItemChanged(selectedItem)
+        selectedItem = NO_ITEM_SELECTED
     }
 }

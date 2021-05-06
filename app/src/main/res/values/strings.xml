@@ -56,7 +56,7 @@
     <string name="distanceText">A %1$s km</string>
     <string name="validation_priceRange">El rango de precios no es coherente</string>
     <string name="locationPermissionText">Esta aplicación puede usar tu ubicación para mostrarla y visualizar la distancia a los viajes. ¿Quieres permitir su uso para este fin?</string>
-    <string name="loading">Cargando</string>
+    <string name="loadingDistance">Cargando distancia</string>
     <string name="selectedTravels">Hay %1$d viajes seleccionados</string>
     <string name="noSelectedTravels">No hay viajes seleccionados</string>
     <string name="errorGettingTravels">Ha ocurrido un error obteniendo los viajes</string>

@@ -30,6 +30,9 @@ class NewTravelViewModel(private val travelRepository: TravelRepository) : ViewM
     private val _toastMessage = MutableLiveData<String>()
     val toastMessage: LiveData<String> get() = _toastMessage
 
+    private val _loading = MutableLiveData(false)
+    val loading: LiveData<Boolean> get() = _loading
+
     val images = mutableListOf("")
 
     fun setStartDate(day: Int, month: Int, year: Int): String {

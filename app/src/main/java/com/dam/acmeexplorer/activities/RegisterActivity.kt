@@ -50,6 +50,7 @@ class RegisterActivity : AppCompatActivity() {
 
             vm.loadingWheel.observe(this@RegisterActivity) {
                 progressBar.visibility = if(it) View.VISIBLE else View.GONE
+                registerButton.isEnabled = !it
             }
 
             vm.emailErrors.observe(this@RegisterActivity) {

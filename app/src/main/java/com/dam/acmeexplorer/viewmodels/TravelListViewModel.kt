@@ -3,6 +3,7 @@ package com.dam.acmeexplorer.viewmodels
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -99,14 +100,12 @@ class TravelListViewModel(private val travelRepository: TravelRepository,
         }
     }
 
-    fun onCheckboxClicked(position: Int): Boolean {
+    fun onCheckboxClicked(position: Int, checked: Boolean) {
         val id = travels.value!![position].id
-        return if(userTravels.contains(id)) {
+        if(!checked) {
             userTravels.remove(id)
-            false
         } else {
             userTravels[id] = true
-            true
         }
     }
 }

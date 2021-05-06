@@ -74,6 +74,10 @@ class NewTravelActivity : AppCompatActivity() {
                 showFileChooser(getFile, getString(R.string.selectImageText), "image/*")
             }
 
+            vm.loading.observe(this@NewTravelActivity) {
+                addButton.isEnabled = !it
+            }
+
             addButton.setOnClickListener {
 
                 val titleVal = title.text.toString()
